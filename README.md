@@ -1,5 +1,8 @@
 # theShelf
 
+YouTube:
+https://youtu.be/981hyT0ZYCw
+
 Main button
 1.	Click the button (everything is turn off) - set first menu - yellow lights
 2.	Click the button when is turn on - turn off everything (don't save state to memory)
