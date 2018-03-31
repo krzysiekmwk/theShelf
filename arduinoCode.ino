@@ -4,8 +4,8 @@
 #include <EEPROM.h>
 
 #define MAIN_BUTTON_PIN 9
-#define YELLOW_LIGHT_PIN 3 //PWM dla zoltej
-#define WHITE_LIGHT_PIN 5 //PWM dla bialej
+#define YELLOW_LIGHT_PIN 3 //PWM for YELLOW
+#define WHITE_LIGHT_PIN 5 //PWM for WHITE
 
 #define COLOR_LIGHT_PIN 4 //WS2812b
 #define COLOR_LED_COUNT 60
@@ -26,8 +26,8 @@ long longPressTime = 500;
 
 Rotary firstEncoder = Rotary(ENCODER_LEFT_PIN, ENCODER_RIGHT_PIN);
 
-byte menuState = 0;	//Tryb swiatla zoltego
-bool isLightOn = false; //Wylaczone jest wszystko
+byte menuState = 0;	//the yellow state
+bool isLightOn = false; //everything is turned off
 
 byte yellowLightPercentage = 100;
 byte whiteLightPercentage = 100;
@@ -38,12 +38,12 @@ void setup() {
 	pinMode(MAIN_BUTTON_PIN,INPUT_PULLUP);
 	pinMode(ENCODER_BUTTON_PIN,INPUT_PULLUP);
 
-	pinMode(YELLOW_LIGHT_PIN,OUTPUT);//Ustawienie wyjsc
+	pinMode(YELLOW_LIGHT_PIN,OUTPUT);//Setup outputs
 	pinMode(WHITE_LIGHT_PIN,OUTPUT);
 	LED.setOutput(COLOR_LIGHT_PIN);
 	LED.sync();
 
-	//Wylaczenie wszystkiego
+	//turning off everything
 	digitalWrite(YELLOW_LIGHT_PIN,LOW);
 	digitalWrite(WHITE_LIGHT_PIN,LOW);
 	setColourRgb(0, 0, 0);
@@ -52,30 +52,30 @@ void setup() {
 }
 
 void loop() {
-	unsigned char result = firstEncoder.process(); // Update enkodera DIR_CW - w prawo, DIR_CCW - lewo, DIR_NONE - nic
+	unsigned char result = firstEncoder.process(); // Update enkoder DIR_CW - right, DIR_CCW - left, DIR_NONE - nothing
   
-	if(mainButton.update()){//Update przycisku głównego
-		if(mainButton.fell()){//Zmiana stanu z wysokiego na niski (przycisniecie)
+	if(mainButton.update()){//Update main button
+		if(mainButton.fell()){//Change state to LOW (button pressed)
 			isLightOn = !isLightOn;
 			if(isLightOn){
-				//Wczytanie zapisanych ustawien
+				//read saved settings
 				yellowLightPercentage = EEPROM.read(0);
 				whiteLightPercentage = EEPROM.read(1);
 				rgbColour[0] = EEPROM.read(2);
 				rgbColour[1] = EEPROM.read(3);
 				rgbColour[2] = EEPROM.read(4);
-        colorNumber = ((EEPROM.read(5) << 0) & 0xFF) + ((EEPROM.read(6) << 8) & 0xFF00);
+        			colorNumber = ((EEPROM.read(5) << 0) & 0xFF) + ((EEPROM.read(6) << 8) & 0xFF00);
 			}
 		}
 	}
 	
-	if(rotaryButton.update()){//Update przycisku encodera
-		if(rotaryButton.fell()){//Zmiana stanu z wysokiego na niski (przycisniecie)
+	if(rotaryButton.update()){//update encoder button
+		if(rotaryButton.fell()){//Change state to LOW (button pressed)
 			buttonTimer = millis();
 		}
 	}
 	if(rotaryButton.rose()){
-		if ((millis() - buttonTimer > longPressTime)) {//Dlugie przytrzymanie przycisku encodera - zapis ustawien
+		if ((millis() - buttonTimer > longPressTime)) {//long pressend encoder button - save settings
 			if(menuState == 0){
 				EEPROM.write(0, yellowLightPercentage);
 			}
@@ -83,45 +83,45 @@ void loop() {
 				EEPROM.write(2, rgbColour[0]);
 				EEPROM.write(3, rgbColour[1]);
 				EEPROM.write(4, rgbColour[2]);
-        EEPROM.write(5, (colorNumber >> 0) & 0xFF);
-        EEPROM.write(6, (colorNumber >> 8) & 0xFF);
+				EEPROM.write(5, (colorNumber >> 0) & 0xFF);
+				EEPROM.write(6, (colorNumber >> 8) & 0xFF);
 			}
 			if(menuState == 2){
 				EEPROM.write(1, whiteLightPercentage);
 			}
 		}
-		else{//krotkie nacisniecie
-      if(!isLightOn){
-        isLightOn = !isLightOn;
-        //Wczytanie zapisanych ustawien
-        yellowLightPercentage = EEPROM.read(0);
-        whiteLightPercentage = EEPROM.read(1);
-        rgbColour[0] = EEPROM.read(2);
-        rgbColour[1] = EEPROM.read(3);
-        rgbColour[2] = EEPROM.read(4);
-        colorNumber = ((EEPROM.read(5) << 0) & 0xFF) + ((EEPROM.read(6) << 8) & 0xFF00);
-      }
-      else{
-        switch(menuState){
-          case 0: menuState++; break;
-          case 1: menuState++; break;
-          case 2: menuState = 0; break;
-        }
-      }
+		else{//short click
+			if(!isLightOn){
+				isLightOn = !isLightOn;
+				//Wczytanie zapisanych ustawien
+				yellowLightPercentage = EEPROM.read(0);
+				whiteLightPercentage = EEPROM.read(1);
+				rgbColour[0] = EEPROM.read(2);
+				rgbColour[1] = EEPROM.read(3);
+				rgbColour[2] = EEPROM.read(4);
+				colorNumber = ((EEPROM.read(5) << 0) & 0xFF) + ((EEPROM.read(6) << 8) & 0xFF00);
+			}
+      			else{
+        			switch(menuState){
+					case 0: menuState++; break;
+					case 1: menuState++; break;
+					case 2: menuState = 0; break;
+				}
+      			}
 		}
 	}
 		
-	if(!isLightOn){//Wylaczenie wszystkiego - zgaszone oswietlenie
+	if(!isLightOn){//turning everything off
 		digitalWrite(YELLOW_LIGHT_PIN,LOW);
 		digitalWrite(WHITE_LIGHT_PIN,LOW);
 		colorNumber = 0;
 		setColourRgb(0, 0, 0);
 		menuState = 0;
 	}
-	else{//Światła są włączone
+	else{//ligt are on
 		//menu
-		if(menuState == 0){ //zolte światło
-			if(result == DIR_CCW){//Przekrecenie w lewo
+		if(menuState == 0){ //yellow light
+			if(result == DIR_CCW){//rotary in left
 				if(yellowLightPercentage > 0)
 					yellowLightPercentage -= 5;
 				else
@@ -137,11 +137,11 @@ void loop() {
 			digitalWrite(WHITE_LIGHT_PIN,LOW);
 			setColourRgb(0, 0, 0);
 		}
-		if(menuState == 1){ // kolorowe swiatlo
+		if(menuState == 1){ // colorfull lights (ws2812b)
 			digitalWrite(YELLOW_LIGHT_PIN,LOW);
 			digitalWrite(WHITE_LIGHT_PIN,LOW);
 			if(result == DIR_CCW){
-        colorNumber+=10;
+       				colorNumber+=10;
 				if(colorNumber > 750)
 					colorNumber = 0;
 
@@ -174,44 +174,44 @@ void loop() {
 				}
 			}
 
-     if(result == DIR_CW){
-      colorNumber-=10;
-       if(colorNumber < 0)
-          colorNumber = 750;
-          
-        if(colorNumber == 0 || colorNumber == 750){
-          rgbColour[0] = 0;//RED
-          rgbColour[1] = 0;//GREEN
-          rgbColour[2] = 250;//BLUE
-        }
-        if(colorNumber > 500 && colorNumber < 750){//R = 0, G = 0, B = 255
-          rgbColour[0] += 10;//RED
-          rgbColour[2] -= 10;//BLUE
-        }
-        if(colorNumber == 500){
-          rgbColour[0] = 250;//RED
-          rgbColour[1] = 0;//GREEN
-          rgbColour[2] = 0;//BLUE
-        }
-        if(colorNumber > 250 && colorNumber < 500){//R = 255, G = 0, B = 0
-          rgbColour[0] -= 10;//RED
-          rgbColour[1] += 10;//GREEN
-        }
-        if(colorNumber == 250){
-          rgbColour[0] = 0;//RED
-          rgbColour[1] = 250;//GREEN
-          rgbColour[2] = 0;//BLUE
-        }
-        if(colorNumber > 0 && colorNumber < 255){//R = 0, G = 255, B = 0
-          rgbColour[1] -= 10;//GREEN
-          rgbColour[2] += 10;//BLUE
-        }
-        
-      }
+			if(result == DIR_CW){
+				colorNumber-=10;
+				if(colorNumber < 0)
+					colorNumber = 750;
+
+				if(colorNumber == 0 || colorNumber == 750){
+					rgbColour[0] = 0;//RED
+					rgbColour[1] = 0;//GREEN
+					rgbColour[2] = 250;//BLUE
+				}
+				if(colorNumber > 500 && colorNumber < 750){//R = 0, G = 0, B = 255
+					rgbColour[0] += 10;//RED
+					rgbColour[2] -= 10;//BLUE
+				}
+				if(colorNumber == 500){
+					rgbColour[0] = 250;//RED
+					rgbColour[1] = 0;//GREEN
+					rgbColour[2] = 0;//BLUE
+				}
+				if(colorNumber > 250 && colorNumber < 500){//R = 255, G = 0, B = 0
+					rgbColour[0] -= 10;//RED
+					rgbColour[1] += 10;//GREEN
+				}
+				if(colorNumber == 250){
+					rgbColour[0] = 0;//RED
+					rgbColour[1] = 250;//GREEN
+					rgbColour[2] = 0;//BLUE
+				}
+				if(colorNumber > 0 && colorNumber < 255){//R = 0, G = 255, B = 0
+					rgbColour[1] -= 10;//GREEN
+					rgbColour[2] += 10;//BLUE
+				}
+
+			}
 			setColourRgb(rgbColour[0], rgbColour[1], rgbColour[2]);
 		}
-		if(menuState == 2){ //biale światło
-			if(result == DIR_CCW){//Przekrecenie w lewo
+		if(menuState == 2){ //white light
+			if(result == DIR_CCW){//turn in left
 				if(whiteLightPercentage > 0)
 					whiteLightPercentage -= 5;
 				else
