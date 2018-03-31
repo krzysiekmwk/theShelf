@@ -6,14 +6,26 @@ Main button
 
 Menu:
 1.	Yellow lights
+
 	a.	Rotary encoder can change the light intensity
+	
 	b.	long press encoder button -> save actual light intensity
+	
 	c.	short press encoder button -> set menut state 2. 
+	
 2.	Colorful state
+
 	a.	Rotary encoder can change the light colour. Colours are change like in rainbow.
+	
 	b.	long press encoder button -> save actual light colour
+	
 	c.	short press encoder button -> set menut state 3. 
+	
 3.	White lights
+
 	a.	Rotary encoder can change the light intensity
+	
 	b.	long press encoder button -> save actual light intensity
+	
 	c.	short press encoder button -> set menut state 1. 
+	
